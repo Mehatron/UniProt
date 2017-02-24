@@ -11,25 +11,25 @@
 /*
  * Global variables
  */
-int fd;
+int fd2;
 
 /*
  * Open connection to PLC
  */
 int UNIPROT_open(const char *port)
 {
-    fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
-    if(fd < 0)
+    fd2 = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
+    if(fd2 < 0)
         return ERROR_OPEN_PORT;
 
-    //fcntl(fd, F_SETFL, FNDELAY);    // Disable waiting when read from port
-    fcntl(fd, F_SETFL, 0);
+    //fcntl(fd2, F_SETFL, FNDELAY);    // Disable waiting when read from port
+    fcntl(fd2, F_SETFL, 0);
 
     /*
      * Set default port parameters
      */
     struct termios portOptions;
-    if(tcgetattr(fd, &portOptions) < 0)
+    if(tcgetattr(fd2, &portOptions) < 0)
         return ERROR_GET_PORT_OPTIONS;
     portOptions.c_cflag |= (CLOCAL | CREAD); // Default parameters (must be set)
     portOptions.c_cflag &= ~(CRTSCTS);
@@ -39,7 +39,7 @@ int UNIPROT_open(const char *port)
     portOptions.c_oflag &= ~(OPOST);
     portOptions.c_cc[VMIN] = 1;     // Read don't block
     portOptions.c_cc[VTIME] = 5;    // Timeour for read 0.5s
-    if(tcsetattr(fd, TCSANOW, &portOptions) < 0)
+    if(tcsetattr(fd2, TCSANOW, &portOptions) < 0)
         return ERROR_SET_PORT_OPTIONS;
 
     if(UNIPROT_setDataBits(DATA_BITS_8) < 0)
@@ -59,8 +59,8 @@ int UNIPROT_open(const char *port)
  */
 int UNIPROT_close(void)
 {
-    fcntl(fd, F_SETFL, 0);          // Reset default behaviour for port
-    if(close(fd) < 0)
+    fcntl(fd2, F_SETFL, 0);          // Reset default behaviour for port
+    if(close(fd2) < 0)
         return ERROR_CLOSE_PORT;
 
     return SUCCESS;
@@ -92,13 +92,13 @@ int UNIPROT_setDataBits(int dataBits)
     }
 
     struct termios portOptions;
-    if(tcgetattr(fd, &portOptions) < 0)
+    if(tcgetattr(fd2, &portOptions) < 0)
         return ERROR_GET_PORT_OPTIONS;
 
     portOptions.c_cflag &= ~CSIZE;
     portOptions.c_cflag |= port;
 
-    if(tcsetattr(fd, TCSANOW, &portOptions) < 0)
+    if(tcsetattr(fd2, TCSANOW, &portOptions) < 0)
         return ERROR_SET_PORT_OPTIONS;
 
     return SUCCESS;
@@ -110,7 +110,7 @@ int UNIPROT_setDataBits(int dataBits)
 int UNIPROT_setParity(int parity)
 {
     struct termios portOptions;
-    if(tcgetattr(fd, &portOptions) < 0)
+    if(tcgetattr(fd2, &portOptions) < 0)
         return ERROR_GET_PORT_OPTIONS;
 
     portOptions.c_cflag &= ~PARENB;
@@ -131,7 +131,7 @@ int UNIPROT_setParity(int parity)
             break;
     }
 
-    if(tcsetattr(fd, TCSANOW, &portOptions) < 0)
+    if(tcsetattr(fd2, TCSANOW, &portOptions) < 0)
         return ERROR_SET_PORT_OPTIONS;
 
     return SUCCESS;
@@ -147,7 +147,7 @@ int UNIPROT_setStopBits(int stopBits)
         return ERROR_WRONG_PARAMETERS;
 
     struct termios portOptions;
-    if(tcgetattr(fd, &portOptions) < 0)
+    if(tcgetattr(fd2, &portOptions) < 0)
         return ERROR_GET_PORT_OPTIONS;
 
     if(stopBits == STOP_BITS_2)
@@ -155,7 +155,7 @@ int UNIPROT_setStopBits(int stopBits)
     else
         portOptions.c_cflag &= ~CSTOPB;
 
-    if(tcsetattr(fd, TCSANOW, &portOptions) < 0)
+    if(tcsetattr(fd2, TCSANOW, &portOptions) < 0)
         return ERROR_SET_PORT_OPTIONS;
 
     return SUCCESS;
@@ -167,7 +167,7 @@ int UNIPROT_setStopBits(int stopBits)
 int UNIPROT_setBaudRate(int baudRate)
 {
     struct termios portOptions;
-    if(tcgetattr(fd, &portOptions) < 0)
+    if(tcgetattr(fd2, &portOptions) < 0)
         return ERROR_GET_PORT_OPTIONS;
 
     int baud;
@@ -190,7 +190,7 @@ int UNIPROT_setBaudRate(int baudRate)
     cfsetispeed(&portOptions, baud);
     cfsetospeed(&portOptions, baud);
 
-    if(tcsetattr(fd, TCSANOW, &portOptions) < 0)
+    if(tcsetattr(fd2, TCSANOW, &portOptions) < 0)
         return ERROR_SET_PORT_OPTIONS;
 
     return SUCCESS;
@@ -214,7 +214,7 @@ int UNIPROT_write(const char *data)
         msg[i + 1] = *data++;
     msg[i + 1] = ETX;
 
-    if(write(fd, msg, count + 2) < count + 2)
+    if(write(fd2, msg, count + 2) < count + 2)
         error = ERROR_SENDING_DATA;
 
     free(msg);
